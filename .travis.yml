@@ -5,7 +5,7 @@
 sudo: required
 language: cpp
 
-# gcc 4.8
+# gcc t
 addons: &gcc48
   apt:
     packages:
@@ -52,7 +52,7 @@ matrix:
     - env: GCC_VERSION=4.8 BUILD_TYPE=Release CPP=11
       os: linux
       addons: *gcc48
-
+    # Test gcc-7: C++11, Build=Debug/Release
     - env: GCC_VERSION=7 BUILD_TYPE=Release CPP=11
       os: linux
       addons: *gcc7
@@ -77,6 +77,12 @@ matrix:
       addons: *clang10
 
     - env: CLANG_VERSION=10 BUILD_TYPE=Release CPP=11 ASAN=On
+      os: linux
+      dist: bionic
+      addons: *clang10
+      
+    # Test clang-10.0: C++17, Build=Debug/Release
+    - env: CLANG_VERSION=10 BUILD_TYPE=Release CPP=17 ASAN=Off
       os: linux
       dist: bionic
       addons: *clang10
