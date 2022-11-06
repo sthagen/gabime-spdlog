@@ -269,21 +269,18 @@ void multi_sink_example2()
 ---
 #### User defined types
 ```c++
-// user defined types logging by implementing operator<<
-#include "spdlog/fmt/ostr.h" // must be included
-struct my_type
+template<>
+struct fmt::formatter<my_type> : fmt::formatter<std::string>
 {
-    int i;
-    template<typename OStream>
-    friend OStream &operator<<(OStream &os, const my_type &c)
+    auto format(my_type my, format_context &ctx) -> decltype(ctx.out())
     {
-        return os << "[my_type i=" << c.i << "]";
+        return format_to(ctx.out(), "[my_type i={}]", my.i);
     }
 };
 
 void user_defined_example()
 {
-    spdlog::get("console")->info("user defined type: {}", my_type{14});
+    spdlog::info("user defined type: {}", my_type(14));
 }
 
 ```
