@@ -7,6 +7,10 @@
 // Custom sink for QPlainTextEdit or QTextEdit and its childs(QTextBrowser...
 // etc) Building and using requires Qt library.
 //
+// Warning: the qt_sink won't be notified if the target widget is destroyed.
+// If the widget's lifetime can be shorter than the logger's one, you should provide some permanent QObject,
+// and then use a standard signal/slot.
+//
 
 #include "spdlog/common.h"
 #include "spdlog/details/log_msg.h"

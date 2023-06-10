@@ -50,6 +50,7 @@ $ cmake .. && make -j
     * syslog.
     * Windows event log.
     * Windows debugger (```OutputDebugString(..)```).
+    * Log to Qt widgets
     * Easily [extendable](https://github.com/gabime/spdlog/wiki/4.-Sinks#implementing-your-own-sink) with custom log targets.
 * Log filtering - log levels can be modified at runtime as well as compile time.
 * Support for loading log levels from argv or environment var.
@@ -421,6 +422,8 @@ void replace_default_logger_example()
 ```
 
 ---
+
+    
 ## Benchmarks
 
 Below are some [benchmarks](https://github.com/gabime/spdlog/blob/v1.x/bench/bench.cpp) done in Ubuntu 64 bit, Intel i7-4770 CPU @ 3.40GHz
