@@ -18,7 +18,7 @@ include(GNUInstallDirs)
 # ---------------------------------------------------------------------------------------
 # Set default build to release
 # ---------------------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
 endif()
 
@@ -344,7 +344,7 @@ if(SPDLOG_INSTALL)
     # ---------------------------------------------------------------------------------------
     # Install CMake config files
     # ---------------------------------------------------------------------------------------
-    export(TARGETS spdlog NAMESPACE spdlog:: FILE "${CMAKE_CURRENT_BINARY_DIR}/${config_targets_file}")
+    export(TARGETS spdlog spdlog_header_only NAMESPACE spdlog:: FILE "${CMAKE_CURRENT_BINARY_DIR}/${config_targets_file}")
     install(EXPORT spdlog DESTINATION ${export_dest_dir} NAMESPACE spdlog:: FILE ${config_targets_file})
 
     include(CMakePackageConfigHelpers)
