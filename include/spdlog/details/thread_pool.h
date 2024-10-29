@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <functional>
-#include <future>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -23,55 +22,60 @@ using async_logger_ptr = std::shared_ptr<spdlog::async_logger>;
 
 enum class async_msg_type { log, flush, terminate };
 
+enum class async_msg_flush { not_synced, synced_flushed, synced_not_flushed };
+
 // Async msg to move to/from the queue
 // Movable only. should never be copied
 struct async_msg : log_msg_buffer {
     async_msg_type msg_type{async_msg_type::log};
     async_logger_ptr worker_ptr;
-    std::promise<void> flush_promise;
+    std::function<void(async_msg_flush)> flush_callback;
 
     async_msg() = default;
-    ~async_msg() = default;
+    ~async_msg() {
+        if (flush_callback) {
+            flush_callback(async_msg_flush::synced_not_flushed);
+            flush_callback = nullptr;
+        }
+    }
 
     // should only be moved in or out of the queue..
     async_msg(const async_msg &) = delete;
 
-// support for vs2013 move
-#if defined(_MSC_VER) && _MSC_VER <= 1800
-    async_msg(async_msg &&other)
+    async_msg(async_msg &&other) SPDLOG_NOEXCEPT
         : log_msg_buffer(std::move(other)),
           msg_type(other.msg_type),
-          worker_ptr(std::move(other.worker_ptr)) {}
-
-    async_msg &operator=(async_msg &&other) {
-        *static_cast<log_msg_buffer *>(this) = std::move(other);
+          worker_ptr(std::move(other.worker_ptr)),
+          flush_callback(std::move(other.flush_callback)) {
+        other.flush_callback = nullptr;
+    }
+    async_msg &operator=(async_msg &&other) SPDLOG_NOEXCEPT {
+        *static_cast<log_msg_buffer *>(this) = static_cast<log_msg_buffer&&>(other);
         msg_type = other.msg_type;
         worker_ptr = std::move(other.worker_ptr);
+        flush_callback = std::move(other.flush_callback);
+        other.flush_callback = nullptr;
         return *this;
     }
-#else  // (_MSC_VER) && _MSC_VER <= 1800
-    async_msg(async_msg &&) = default;
-    async_msg &operator=(async_msg &&) = default;
-#endif
 
     // construct from log_msg with given type
     async_msg(async_logger_ptr &&worker, async_msg_type the_type, const details::log_msg &m)
         : log_msg_buffer{m},
           msg_type{the_type},
           worker_ptr{std::move(worker)},
-          flush_promise{} {}
+          flush_callback{} {}
 
     async_msg(async_logger_ptr &&worker, async_msg_type the_type)
         : log_msg_buffer{},
           msg_type{the_type},
           worker_ptr{std::move(worker)},
-          flush_promise{} {}
+          flush_callback{} {}
 
-    async_msg(async_logger_ptr &&worker, async_msg_type the_type, std::promise<void> &&promise)
+    async_msg(async_logger_ptr &&worker, async_msg_type the_type, std::function<void(async_msg_flush)> &&callback)
         : log_msg_buffer{},
           msg_type{the_type},
           worker_ptr{std::move(worker)},
-          flush_promise{std::move(promise)} {}
+          flush_callback{std::move(callback)} {}
 
     explicit async_msg(async_msg_type the_type)
         : async_msg{nullptr, the_type} {}
@@ -98,7 +102,7 @@ public:
     void post_log(async_logger_ptr &&worker_ptr,
                   const details::log_msg &msg,
                   async_overflow_policy overflow_policy);
-    std::future<void> post_flush(async_logger_ptr &&worker_ptr,
+    void post_and_wait_for_flush(async_logger_ptr &&worker_ptr,
                                  async_overflow_policy overflow_policy);
     size_t overrun_counter();
     void reset_overrun_counter();
