@@ -49,12 +49,12 @@ struct async_msg : log_msg_buffer {
           flush_callback(std::move(other.flush_callback)) {
         other.flush_callback = nullptr;
     }
+
     async_msg &operator=(async_msg &&other) SPDLOG_NOEXCEPT {
         *static_cast<log_msg_buffer *>(this) = static_cast<log_msg_buffer&&>(other);
         msg_type = other.msg_type;
         worker_ptr = std::move(other.worker_ptr);
-        flush_callback = std::move(other.flush_callback);
-        other.flush_callback = nullptr;
+        std::swap(flush_callback, other.flush_callback);
         return *this;
     }
 
