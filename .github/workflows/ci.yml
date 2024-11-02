@@ -77,3 +77,32 @@ jobs:
           make -j2
           ctest -j2 --output-on-failure
 
+  build:
+    runs-on: windows-latest
+    name: "Windows MSVC 2022 (C++11, Release)"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install CMake
+        run: choco install cmake --installargs '"ADD_CMAKE_TO_PATH=System"' --no-progress
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_CXX_STANDARD=11 `
+            -DSPDLOG_BUILD_EXAMPLE=ON `
+            -DSPDLOG_BUILD_EXAMPLE_HO=ON `
+            -DSPDLOG_BUILD_WARNINGS=ON `
+            -DSPDLOG_BUILD_BENCH=OFF `
+            -DSPDLOG_BUILD_TESTS=ON `
+            -DSPDLOG_BUILD_TESTS_HO=OFF `
+            -DSPDLOG_SANITIZE_ADDRESS=OFF
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run Tests
+        run: ctest --test-dir build -C Release --output-on-failure --verbose
+

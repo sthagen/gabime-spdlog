@@ -33,9 +33,9 @@ elseif(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
-# make sure __cplusplus is defined when using msvc and enable parallel build
+# under msvc make sure __cplusplus, parallel build and utf-8 enabled
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    string(APPEND CMAKE_CXX_FLAGS " /Zc:__cplusplus /MP")
+    string(APPEND CMAKE_CXX_FLAGS " /Zc:__cplusplus /MP /utf-8")
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -80,6 +80,10 @@ option(SPDLOG_BUILD_BENCH "Build benchmarks (Requires https://github.com/google/
 
 # sanitizer options
 option(SPDLOG_SANITIZE_ADDRESS "Enable address sanitizer in tests" OFF)
+option(SPDLOG_SANITIZE_THREAD "Enable thread sanitizer in tests" OFF)
+if(SPDLOG_SANITIZE_ADDRESS AND SPDLOG_SANITIZE_THREAD)
+    message(FATAL_ERROR "SPDLOG_SANITIZE_ADDRESS and SPDLOG_SANITIZE_THREAD are mutually exclusive")
+endif()
 
 # warning options
 option(SPDLOG_BUILD_WARNINGS "Enable compiler warnings" OFF)
@@ -193,6 +197,13 @@ if(COMMAND target_precompile_headers AND SPDLOG_ENABLE_PCH)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pch.h.in ${PROJECT_BINARY_DIR}/spdlog_pch.h @ONLY)
     target_precompile_headers(spdlog PRIVATE ${PROJECT_BINARY_DIR}/spdlog_pch.h)
 endif()
+
+# sanitizer support
+if(SPDLOG_SANITIZE_ADDRESS)
+    spdlog_enable_addr_sanitizer(spdlog)
+elseif (SPDLOG_SANITIZE_THREAD)
+    spdlog_enable_thread_sanitizer(spdlog)
+endif ()
 
 # ---------------------------------------------------------------------------------------
 # Header only version

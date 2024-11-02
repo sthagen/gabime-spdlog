@@ -105,9 +105,9 @@ TEST_CASE("clone-logger", "[clone]") {
 }
 
 TEST_CASE("clone async", "[clone]") {
-    using spdlog::sinks::test_sink_st;
+    using spdlog::sinks::test_sink_mt;
     spdlog::init_thread_pool(4, 1);
-    auto test_sink = std::make_shared<test_sink_st>();
+    auto test_sink = std::make_shared<test_sink_mt>();
     auto logger = std::make_shared<spdlog::async_logger>("orig", test_sink, spdlog::thread_pool());
     logger->set_pattern("%v");
     auto cloned = logger->clone("clone");

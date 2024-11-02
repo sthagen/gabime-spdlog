@@ -62,25 +62,9 @@ void SPDLOG_INLINE thread_pool::post_log(async_logger_ptr &&worker_ptr,
     post_async_msg_(std::move(async_m), overflow_policy);
 }
 
-void SPDLOG_INLINE thread_pool::post_and_wait_for_flush(async_logger_ptr &&worker_ptr,
-                                                        async_overflow_policy overflow_policy) {
-    std::mutex m;
-    std::unique_lock<std::mutex> l(m);
-    std::condition_variable cv;
-    std::atomic<async_msg_flush> cv_flag{async_msg_flush::not_synced};
-    post_async_msg_(async_msg(std::move(worker_ptr), async_msg_type::flush, [&cv, &cv_flag](async_msg_flush flushed) {
-        cv_flag.store(flushed, std::memory_order_relaxed);
-        cv.notify_all();
-    }), overflow_policy);
-    while(cv_flag.load(std::memory_order_relaxed) == async_msg_flush::not_synced) {
-        cv.wait_for(l, std::chrono::milliseconds(100), [&cv_flag]() {
-            return cv_flag.load(std::memory_order_relaxed) != async_msg_flush::not_synced;
-        });
-    }
-
-    if(cv_flag.load(std::memory_order_relaxed) == async_msg_flush::synced_not_flushed) {
-        throw spdlog_ex("Request for flushing got dropped.");
-    }
+void SPDLOG_INLINE thread_pool::post_flush(async_logger_ptr &&worker_ptr,
+                                           async_overflow_policy overflow_policy) {
+    post_async_msg_(async_msg(std::move(worker_ptr), async_msg_type::flush), overflow_policy);
 }
 
 size_t SPDLOG_INLINE thread_pool::overrun_counter() { return q_.overrun_counter(); }
@@ -124,10 +108,6 @@ bool SPDLOG_INLINE thread_pool::process_next_msg_() {
         }
         case async_msg_type::flush: {
             incoming_async_msg.worker_ptr->backend_flush_();
-            if(incoming_async_msg.flush_callback) {
-                incoming_async_msg.flush_callback(async_msg_flush::synced_flushed);
-                incoming_async_msg.flush_callback = nullptr;
-            }
             return true;
         }
 
