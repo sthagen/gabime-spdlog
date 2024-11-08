@@ -33,10 +33,6 @@ elseif(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
-# under msvc make sure __cplusplus, parallel build and utf-8 enabled
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    string(APPEND CMAKE_CXX_FLAGS " /Zc:__cplusplus /MP /utf-8")
-endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -112,11 +108,15 @@ endif()
 if(WIN32)
     option(SPDLOG_WCHAR_SUPPORT "Support wchar api" OFF)
     option(SPDLOG_WCHAR_FILENAMES "Support wchar filenames" OFF)
-    option(SPDLOG_WCHAR_CONSOLE "Support wchar output to console" OFF)
+    option(SPDLOG_WCHAR_CONSOLE "Support wchar output to console" OFF)    
 else()
     set(SPDLOG_WCHAR_SUPPORT OFF CACHE BOOL "non supported option" FORCE)
     set(SPDLOG_WCHAR_FILENAMES OFF CACHE BOOL "non supported option" FORCE)
     set(SPDLOG_WCHAR_CONSOLE OFF CACHE BOOL "non supported option" FORCE)
+endif()
+
+if(MSVC)    
+    option(SPDLOG_MSVC_UTF8 "Enable/disable msvc /utf-8 flag required by fmt lib" ON)   
 endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -269,6 +269,15 @@ foreach(
         target_compile_definitions(spdlog_header_only INTERFACE ${SPDLOG_OPTION})
     endif()
 endforeach()
+
+if(MSVC)
+    target_compile_options(spdlog PRIVATE "/Zc:__cplusplus")
+    target_compile_options(spdlog_header_only INTERFACE "/Zc:__cplusplus")
+    if(SPDLOG_MSVC_UTF8)
+	    target_compile_options(spdlog PUBLIC "/utf-8")
+	    target_compile_options(spdlog_header_only INTERFACE "/utf-8")    
+     endif()
+endif()
 
 # ---------------------------------------------------------------------------------------
 # If exceptions are disabled, disable them in the bundled fmt as well
