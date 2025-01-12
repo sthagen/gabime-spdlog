@@ -133,6 +133,7 @@ option(
     "prevent spdlog from using of std::atomic log levels (use only if your code never modifies log levels concurrently"
     OFF)
 option(SPDLOG_DISABLE_DEFAULT_LOGGER "Disable default logger creation" OFF)
+option(SPDLOG_FWRITE_UNLOCKED "Use the unlocked variant of fwrite. Leave this on unless your libc doesn't have it" ON)
 
 # clang-tidy
 option(SPDLOG_TIDY "run clang-tidy" OFF)
@@ -241,15 +242,17 @@ endif()
 # ---------------------------------------------------------------------------------------
 # Check if fwrite_unlocked/_fwrite_nolock is available
 # ---------------------------------------------------------------------------------------
-include(CheckSymbolExists)
-if(WIN32)
-    check_symbol_exists(_fwrite_nolock "stdio.h" HAVE_FWRITE_UNLOCKED)
-else ()
-    check_symbol_exists(fwrite_unlocked "stdio.h" HAVE_FWRITE_UNLOCKED)
-endif()
-if(HAVE_FWRITE_UNLOCKED)
-    target_compile_definitions(spdlog PRIVATE SPDLOG_FWRITE_UNLOCKED)
-    target_compile_definitions(spdlog_header_only INTERFACE SPDLOG_FWRITE_UNLOCKED)
+if(SPDLOG_FWRITE_UNLOCKED)
+	include(CheckSymbolExists)
+	if(WIN32)
+	    check_symbol_exists(_fwrite_nolock "stdio.h" HAVE_FWRITE_UNLOCKED)
+	else ()
+	    check_symbol_exists(fwrite_unlocked "stdio.h" HAVE_FWRITE_UNLOCKED)
+	endif()
+	if(HAVE_FWRITE_UNLOCKED)
+	    target_compile_definitions(spdlog PRIVATE SPDLOG_FWRITE_UNLOCKED)
+	    target_compile_definitions(spdlog_header_only INTERFACE SPDLOG_FWRITE_UNLOCKED)
+	endif()
 endif()
 
 # ---------------------------------------------------------------------------------------
