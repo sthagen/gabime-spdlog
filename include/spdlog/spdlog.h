@@ -95,7 +95,7 @@ SPDLOG_API void set_error_handler(void (*handler)(const std::string &msg));
 SPDLOG_API void register_logger(std::shared_ptr<logger> logger);
 
 // Register the given logger with the given name
-// Will replace any the existing logger with the same name if exists.
+// Will replace any existing logger with the same name.
 SPDLOG_API void register_or_replace(std::shared_ptr<logger> logger);
 
 // Apply a user-defined function on all registered loggers
