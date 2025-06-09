@@ -71,7 +71,7 @@ inline std::unordered_map<std::string, std::string> extract_key_vals_(const std:
 }
 
 SPDLOG_INLINE void load_levels(const std::string &input) {
-    if (input.empty() || input.size() > 512) {
+    if (input.empty() || input.size() >= 32768) {
         return;
     }
 
