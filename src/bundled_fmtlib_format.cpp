@@ -8,17 +8,8 @@
 
 #if !defined(SPDLOG_FMT_EXTERNAL) && !defined(SPDLOG_USE_STD_FORMAT)
 
-// Supress MSVC C4834 warning (caused by fmt::local_ref discarding is_alpha() retval).
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4834)
-#endif
-
 #include <spdlog/fmt/bundled/format-inl.h>
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 FMT_BEGIN_NAMESPACE
 
 #if FMT_USE_LOCALE
